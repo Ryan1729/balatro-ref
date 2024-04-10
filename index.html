@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style type="text/css">body{
+margin:40px auto;
+max-width:1024px;
+line-height:1.6;
+font-size:18px;
+color:#888;
+background-color:#111;
+padding:0 10px
+}
+h1,h2,h3{line-height:1.2;text-align:center;}
+a:link {color: #999;}
+a:visited {color: #666;}
+.two-column-grid {
+    display: grid;
+    grid-template-columns: 50% 50%;
+}
+input {
+    width: 90%;
+    margin: 5%;
+}
+</style>
+</head>
+<body>
+    <h1> Balatro </h1>
+
+    <div class="two-column-grid">
+        <div>
+            <h2> Flush </h2>
+            
+            <input id="flush-section-input" />
+            <div id="flush-section-parent" ></div>
+        </div>
+        <div>
+            <h2> Straight </h2>
+            <input id="straight-section-input" />
+            <div id="straight-section-parent" ></div>
+        </div>
+    </div>
+</body>
+<script>
+    const flushSectionInput = document.getElementById("flush-section-input");
+    const flushSectionParent = document.getElementById("flush-section-parent");
+    const straightSectionInput = document.getElementById("straight-section-input");
+    const straightSectionParent = document.getElementById("straight-section-parent");
+    
+    const Err = (error) => {
+        return { error }
+    }
+    
+    const Ok = (result) => {
+        return { result }
+    }
+
+    const parse = (str) => {
+        if (str === "") {
+            return Err("No input")
+        }
+        
+        let baseChips = []
+        
+        for (c of str) {
+            switch (c) {
+                default:
+                    return Err("Unhandled char: "+ c)
+                case ' ':
+                    continue
+                case 'A':
+                case 'a':
+                case '1':
+                    baseChips.push(11)
+                break
+                case 'K':
+                case 'k':
+                case 'Q':
+                case 'q':
+                case 'J':
+                case 'j':
+                case 'T':
+                case 't':
+                    baseChips.push(10)
+                break
+                case '9':
+                    baseChips.push(9)
+                break
+                case '8':
+                    baseChips.push(8)
+                break
+                case '7':
+                    baseChips.push(7)
+                break
+                case '6':
+                    baseChips.push(6)
+                break
+                case '5':
+                    baseChips.push(5)
+                break
+                case '4':
+                    baseChips.push(4)
+                break
+                case '3':
+                    baseChips.push(3)
+                break
+                case '2':
+                    baseChips.push(2)
+                break
+            }
+        }
+        
+        return Ok({
+            baseChips,
+        })
+        
+    }
+
+    flushSectionInput.addEventListener("input", (e) => {
+        const parsedResult = parse(e.target.value)
+
+        if (parsedResult.result === undefined) {
+            flushSectionParent.textContent = parsedResult.error
+            return
+        }
+        
+        const parsed = parsedResult.result
+
+        let sum = 0
+        let sumWork = ""
+        let sep = ""
+        for (const chips of parsed.baseChips) {
+            sum += chips
+
+            sumWork += sep
+            sumWork += chips
+            sep = " + "
+        }
+
+        // TODO allow selecting more options for the base values
+        const baseValues = { chips: 35, mult: 4 }
+
+        flushSectionParent.innerHTML = `<pre>
+            (${sumWork}) = ${sum}
+            (${baseValues.chips} + ${sum}) × ${baseValues.mult} = ${(baseValues.chips + sum) * baseValues.mult}
+        </pre>`
+    })
+    
+    straightSectionInput.addEventListener("input", (e) => {
+        const parsedResult = parse(e.target.value)
+
+        if (parsedResult.result === undefined) {
+            straightSectionParent.textContent = parsedResult.error
+            return
+        }
+        
+        const parsed = parsedResult.result
+
+        let sum = 0
+        let sumWork = ""
+        let sep = ""
+        for (const chips of parsed.baseChips) {
+            sum += chips
+
+            sumWork += sep
+            sumWork += chips
+            sep = " + "
+        }
+
+        // TODO allow selecting more options for the base values
+        const baseValues = { chips: 30, mult: 4 }
+
+        straightSectionParent.innerHTML = `<pre>
+            (${sumWork}) = ${sum}
+            (${baseValues.chips} + ${sum}) × ${baseValues.mult} = ${(baseValues.chips + sum) * baseValues.mult}
+        </pre>`
+    })
+</script>
+</html>
