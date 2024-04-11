@@ -16,34 +16,26 @@ a:visited {color: #666;}
     display: grid;
     grid-template-columns: 50% 50%;
 }
+.flex {
+    display: flex;
+}
 input {
     width: 90%;
-    margin: 5%;
+    margin-left: 5%;
+    margin-right: 5%;
+    color:#888;
+    background-color:#111;
 }
 </style>
 </head>
 <body>
     <h1> Balatro </h1>
 
-    <div class="two-column-grid">
-        <div>
-            <h2> Flush </h2>
-            
-            <input id="flush-section-input" />
-            <div id="flush-section-parent" ></div>
-        </div>
-        <div>
-            <h2> Straight </h2>
-            <input id="straight-section-input" />
-            <div id="straight-section-parent" ></div>
-        </div>
+    <div class="two-column-grid" id="section-parent">
     </div>
 </body>
 <script>
-    const flushSectionInput = document.getElementById("flush-section-input");
-    const flushSectionParent = document.getElementById("flush-section-parent");
-    const straightSectionInput = document.getElementById("straight-section-input");
-    const straightSectionParent = document.getElementById("straight-section-parent");
+    const sectionParent = document.getElementById("section-parent");
     
     const Err = (error) => {
         return { error }
@@ -52,6 +44,19 @@ input {
     const Ok = (result) => {
         return { result }
     }
+    
+    let sections = [
+        {
+            label: "Flush",
+            baseChips: 35,
+            baseMult: 4,
+        },
+        {
+            label: "Straight",
+            baseChips: 30,
+            baseMult: 4,
+        },
+    ]
 
     const parse = (str) => {
         if (str === "") {
@@ -111,67 +116,85 @@ input {
         return Ok({
             baseChips,
         })
-        
     }
-
-    flushSectionInput.addEventListener("input", (e) => {
-        const parsedResult = parse(e.target.value)
-
-        if (parsedResult.result === undefined) {
-            flushSectionParent.textContent = parsedResult.error
-            return
-        }
-        
-        const parsed = parsedResult.result
-
-        let sum = 0
-        let sumWork = ""
-        let sep = ""
-        for (const chips of parsed.baseChips) {
-            sum += chips
-
-            sumWork += sep
-            sumWork += chips
-            sep = " + "
-        }
-
-        // TODO allow selecting more options for the base values
-        const baseValues = { chips: 35, mult: 4 }
-
-        flushSectionParent.innerHTML = `<pre>
-            (${sumWork}) = ${sum}
-            (${baseValues.chips} + ${sum}) × ${baseValues.mult} = ${(baseValues.chips + sum) * baseValues.mult}
-        </pre>`
-    })
     
-    straightSectionInput.addEventListener("input", (e) => {
-        const parsedResult = parse(e.target.value)
+    const renderSections = () => {
+        for (let i = 0; i < sections.length; i += 1) {
+            if (i < sectionParent.childElementCount - 1) {
+                continue
+            }
 
-        if (parsedResult.result === undefined) {
-            straightSectionParent.textContent = parsedResult.error
-            return
+            const spec = sections[i]
+            
+            const sectionElement = document.createElement("div")
+            
+            const ids = {
+                baseChips: `section-${i}-base-chips`,
+                baseMult: `section-${i}-base-mult`,
+                input: `section-${i}-input`,
+                parent: `section-${i}-parent`,
+            }
+            
+            sectionElement.innerHTML = `
+                <h2> ${spec.label || "missing label"} </h2>
+                
+                <span class="flex">
+                    <input id="${ids.baseChips}" type="number" />
+                    ×
+                    <input id="${ids.baseMult}" type="number" />
+                </span>
+                
+                <input id="${ids.input}" />
+                <output id="${ids.parent}" ></output>
+            `
+            
+            sectionParent.appendChild(sectionElement)
+            
+            const elements = {
+                baseChips: document.getElementById(ids.baseChips),
+                baseMult: document.getElementById(ids.baseMult),
+                input: document.getElementById(ids.input),
+                parent: document.getElementById(ids.parent),
+            }
+
+            elements.baseChips.value = spec.baseChips;
+            elements.baseMult.value = spec.baseMult;
+
+            const onInput = () => {
+                const parsedResult = parse(elements.input.value)
+
+                if (parsedResult.result === undefined) {
+                    elements.parent.textContent = parsedResult.error
+                    return
+                }
+                
+                const parsed = parsedResult.result
+
+                let sum = 0
+                let sumWork = ""
+                let sep = ""
+                for (const chips of parsed.baseChips) {
+                    sum += chips
+
+                    sumWork += sep
+                    sumWork += chips
+                    sep = " + "
+                }
+
+                const baseValues = { chips: parseInt(elements.baseChips.value), mult: parseInt(elements.baseMult.value) }
+
+                elements.parent.innerHTML = `<pre>
+                    (${sumWork}) = ${sum}
+                    (${baseValues.chips} + ${sum}) × ${baseValues.mult} = ${(baseValues.chips + sum) * baseValues.mult}
+                </pre>`
+            }
+
+            elements.baseChips.addEventListener("input", onInput)
+            elements.baseMult.addEventListener("input", onInput)
+            elements.input.addEventListener("input", onInput)
         }
-        
-        const parsed = parsedResult.result
-
-        let sum = 0
-        let sumWork = ""
-        let sep = ""
-        for (const chips of parsed.baseChips) {
-            sum += chips
-
-            sumWork += sep
-            sumWork += chips
-            sep = " + "
-        }
-
-        // TODO allow selecting more options for the base values
-        const baseValues = { chips: 30, mult: 4 }
-
-        straightSectionParent.innerHTML = `<pre>
-            (${sumWork}) = ${sum}
-            (${baseValues.chips} + ${sum}) × ${baseValues.mult} = ${(baseValues.chips + sum) * baseValues.mult}
-        </pre>`
-    })
+    }
+    
+    renderSections()
 </script>
 </html>
