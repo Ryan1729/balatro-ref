@@ -12,9 +12,8 @@ padding:0 10px
 h1,h2,h3{line-height:1.2;text-align:center;}
 a:link {color: #999;}
 a:visited {color: #666;}
-.two-column-grid {
+.column-grid {
     display: grid;
-    grid-template-columns: 50% 50%;
 }
 .flex {
     display: flex;
@@ -31,7 +30,7 @@ input {
 <body>
     <h1> Balatro </h1>
 
-    <div class="two-column-grid" id="section-parent">
+    <div class="column-grid" id="section-parent">
     </div>
 </body>
 <script>
@@ -183,10 +182,10 @@ input {
 
                 const baseValues = { chips: parseInt(elements.baseChips.value), mult: parseInt(elements.baseMult.value) }
 
-                elements.parent.innerHTML = `<pre>
-                    (${sumWork}) = ${sum}
-                    (${baseValues.chips} + ${sum}) × ${baseValues.mult} = ${(baseValues.chips + sum) * baseValues.mult}
-                </pre>`
+                elements.parent.innerHTML = `
+                    <p> (${sumWork}) = ${sum} </p>
+                    <p> (${baseValues.chips} + ${sum}) × ${baseValues.mult} = ${(baseValues.chips + sum) * baseValues.mult} </p>
+                `
             }
 
             elements.baseChips.addEventListener("input", onInput)
