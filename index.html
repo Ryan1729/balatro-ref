@@ -25,45 +25,122 @@ input {
     color:#888;
     background-color:#111;
 }
+select, button {
+    color:#888;
+    background-color:#111;
+}
+#section-type-dropdown, #section-type-add-button {
+    width: 48%;
+}
 </style>
 </head>
 <body>
     <h1> Balatro </h1>
 
-    <div class="column-grid" id="section-parent">
-    </div>
+    <select id="section-type-dropdown"></select>
+    <button id="section-type-add-button">Add</button>
+
+    <div class="column-grid" id="section-parent"></div>
 </body>
 <script>
+    const sectionTypeDropdown = document.getElementById("section-type-dropdown");
+    const sectionTypeAddButton = document.getElementById("section-type-add-button");
     const sectionParent = document.getElementById("section-parent");
-    
-    const Err = (error) => {
-        return { error }
-    }
-    
-    const Ok = (result) => {
-        return { result }
-    }
-    
-    let sections = [
+
+    const sectionTypes = [
         {
-            label: "Flush",
-            baseChips: 35,
-            baseMult: 4,
+            label: "High Card",
+            baseChips: 5,
+            baseMult: 1,
+        },
+        {
+            label: "Pair",
+            baseChips: 10,
+            baseMult: 2,
+        },
+        {
+            label: "Two Pair",
+            baseChips: 20,
+            baseMult: 2,
+        },
+        {
+            label: "Three of a Kind",
+            baseChips: 30,
+            baseMult: 3,
         },
         {
             label: "Straight",
             baseChips: 30,
             baseMult: 4,
         },
+        {
+            label: "Flush",
+            baseChips: 35,
+            baseMult: 4,
+        },
+        {
+            label: "Full House",
+            baseChips: 40,
+            baseMult: 4,
+        },
+        {
+            label: "Four of a Kind",
+            baseChips: 60,
+            baseMult: 7,
+        },
+        {
+            label: "Straight Flush",
+            baseChips: 100,
+            baseMult: 8,
+        },
+        {
+            label: "Five of a Kind",
+            baseChips: 120,
+            baseMult: 12,
+        },
+        {
+            label: "Flush House",
+            baseChips: 140,
+            baseMult: 14,
+        },
+        {
+            label: "Flush Five",
+            baseChips: 160,
+            baseMult: 16,
+        },
     ]
+
+
+    for (let i = 0; i < sectionTypes.length; i += 1) {
+        const sectionType = sectionTypes[i]
+        sectionTypeDropdown.innerHTML += `<option value="${i}">${sectionType.label} - ${sectionType.baseChips} × ${sectionType.baseMult} </option>`
+    }
+    sectionTypeAddButton.addEventListener("click", () => {
+        addSection(parseInt(sectionTypeDropdown.value))
+    })
+
+    let sections = []
+
+    const addSection = (index) => {
+        sections.push(sectionTypes[index])
+        renderSections()
+    }
+
+    const Err = (error) => {
+        return { error }
+    }
+
+    const Ok = (result) => {
+        return { result }
+    }
 
     const parse = (str) => {
         if (str === "") {
             return Err("No input")
         }
-        
+
         let baseChips = []
-        
+
         for (c of str) {
             switch (c) {
                 default:
@@ -111,44 +188,48 @@ input {
                 break
             }
         }
-        
+
         return Ok({
             baseChips,
         })
     }
-    
+
     const renderSections = () => {
         for (let i = 0; i < sections.length; i += 1) {
-            if (i < sectionParent.childElementCount - 1) {
+            if (i < sectionParent.childElementCount) {
                 continue
             }
 
             const spec = sections[i]
-            
+
             const sectionElement = document.createElement("div")
-            
+
             const ids = {
                 baseChips: `section-${i}-base-chips`,
                 baseMult: `section-${i}-base-mult`,
                 input: `section-${i}-input`,
                 parent: `section-${i}-parent`,
             }
-            
+
             sectionElement.innerHTML = `
                 <h2> ${spec.label || "missing label"} </h2>
-                
+
                 <span class="flex">
                     <input id="${ids.baseChips}" type="number" />
                     ×
                     <input id="${ids.baseMult}" type="number" />
                 </span>
-                
-                <input id="${ids.input}" />
+
+                <input id="${ids.input}" placeholder="A hand in abbrevated form. Example: AKT72" />
                 <output id="${ids.parent}" ></output>
             `
-            
-            sectionParent.appendChild(sectionElement)
-            
+
+            if (sectionParent.childElementCount > 0) {
+                sectionParent.insertBefore(sectionElement, sectionParent.children[0])
+            } else {
+                sectionParent.appendChild(sectionElement)
+            }
+
             const elements = {
                 baseChips: document.getElementById(ids.baseChips),
                 baseMult: document.getElementById(ids.baseMult),
@@ -166,7 +247,7 @@ input {
                     elements.parent.textContent = parsedResult.error
                     return
                 }
-                
+
                 const parsed = parsedResult.result
 
                 let sum = 0
@@ -193,7 +274,8 @@ input {
             elements.input.addEventListener("input", onInput)
         }
     }
-    
-    renderSections()
+
+    addSection(5)
+    addSection(4)
 </script>
 </html>
