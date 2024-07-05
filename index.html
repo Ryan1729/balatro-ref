@@ -32,10 +32,36 @@ select, button {
 #section-type-dropdown, #section-type-add-button {
     width: 48%;
 }
+fieldset {
+    width: 50%;
+    display: inline-flex;
+}
+.radio-row {
+    width: 90%;
+    margin-left: 5%;
+    margin-right: 5%;
+    color:#888;
+    background-color:#111;
+}
+
 </style>
 </head>
 <body>
     <h1> Balatro </h1>
+
+    <fieldset>
+      <legend>Calculation type:</legend>
+
+      <span class="radio-row">
+        <label for="chips-times-mult">Chips Times Mult</label>
+        <input type="radio" id="chips-times-mult" name="calc-type" value="chips-times-mult" checked />
+      </span>
+
+      <span class="radio-row">
+        <label for="plasma-deck">Plasma Deck</label>
+        <input type="radio" id="plasma-deck" name="calc-type" value="plasma-deck" />
+      </span>
+    </fieldset>
 
     <select id="section-type-dropdown"></select>
     <button id="section-type-add-button">Add</button>
@@ -43,6 +69,22 @@ select, button {
     <div class="column-grid" id="section-parent"></div>
 </body>
 <script>
+    let calculationType = "chips-times-mult"
+    const calculationTypeElements = [
+        document.getElementById("chips-times-mult"),
+        document.getElementById("plasma-deck"),
+    ]
+
+    const onCalculationTypeChange = () => {
+        // We assume exactly one is always checked.
+        calculationType = calculationTypeElements.filter(e => e.checked)[0].value
+        renderSections()
+    }
+
+    for (e of calculationTypeElements) {
+        e.onchange = onCalculationTypeChange;
+    }
+
     const sectionTypeDropdown = document.getElementById("section-type-dropdown");
     const sectionTypeAddButton = document.getElementById("section-type-add-button");
     const sectionParent = document.getElementById("section-parent");
@@ -196,13 +238,7 @@ select, button {
 
     const renderSections = () => {
         for (let i = 0; i < sections.length; i += 1) {
-            if (i < sectionParent.childElementCount) {
-                continue
-            }
-
             const spec = sections[i]
-
-            const sectionElement = document.createElement("div")
 
             const ids = {
                 baseChips: `section-${i}-base-chips`,
@@ -211,23 +247,31 @@ select, button {
                 parent: `section-${i}-parent`,
             }
 
-            sectionElement.innerHTML = `
-                <h2> ${spec.label || "missing label"} </h2>
-
-                <span class="flex">
-                    <input id="${ids.baseChips}" type="number" />
-                    ×
-                    <input id="${ids.baseMult}" type="number" />
-                </span>
-
-                <input id="${ids.input}" placeholder="A hand in abbrevated form. Example: AKT72" />
-                <output id="${ids.parent}" ></output>
-            `
-
-            if (sectionParent.childElementCount > 0) {
-                sectionParent.insertBefore(sectionElement, sectionParent.children[0])
+            const wasAddedAlready = i < sectionParent.childElementCount;
+            let sectionElement;
+            if (wasAddedAlready) {
+                sectionElement = sectionParent.children[0]
             } else {
-                sectionParent.appendChild(sectionElement)
+                sectionElement = document.createElement("div");
+
+                sectionElement.innerHTML = `
+                    <h2> ${spec.label || "missing label"} </h2>
+
+                    <span class="flex">
+                        <input id="${ids.baseChips}" type="number" />
+                        ×
+                        <input id="${ids.baseMult}" type="number" />
+                    </span>
+
+                    <input id="${ids.input}" placeholder="A hand in abbrevated form. Example: AKT72" />
+                    <output id="${ids.parent}" ></output>
+                `
+
+                if (sectionParent.childElementCount > 0) {
+                    sectionParent.insertBefore(sectionElement, sectionParent.children[0])
+                } else {
+                    sectionParent.appendChild(sectionElement)
+                }
             }
 
             const elements = {
@@ -263,15 +307,33 @@ select, button {
 
                 const baseValues = { chips: parseInt(elements.baseChips.value), mult: parseInt(elements.baseMult.value) }
 
-                elements.parent.innerHTML = `
-                    <p> (${sumWork}) = ${sum} </p>
-                    <p> (${baseValues.chips} + ${sum}) × ${baseValues.mult} = ${(baseValues.chips + sum) * baseValues.mult} </p>
-                `
+                let work;
+                switch (calculationType) {
+                    default:
+                    case "chips-times-mult":
+                        work = `
+                            <p> (${sumWork}) = ${sum} </p>
+                            <p> (${baseValues.chips} + ${sum}) × ${baseValues.mult} = ${(baseValues.chips + sum) * baseValues.mult} </p>
+                        `;
+                    break
+                    case "plasma-deck":
+                        const average = ((baseValues.chips + sum) + baseValues.mult) / 2;
+
+                        work = `
+                            <p> (${sumWork}) = ${sum} </p>
+                            <p> ((${baseValues.chips} + ${sum}) + ${baseValues.mult} / 2) ^ 2 = ${average * average} </p>
+                        `;
+                    break
+                }
+                ;
+                elements.parent.innerHTML = work;
             }
 
-            elements.baseChips.addEventListener("input", onInput)
-            elements.baseMult.addEventListener("input", onInput)
-            elements.input.addEventListener("input", onInput)
+            elements.baseChips.oninput = onInput;
+            elements.baseMult.oninput = onInput;
+            elements.input.oninput = onInput;
+
+            onInput();
         }
     }
 
